@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% load humanize %}
+
+{%block content %}
+
+<section class="section-prod-list">
+    <div class="container">
+        <div class="t-flex t-items-center">
+            <h1 class="t-font-bold"><i class="fas fa-tshirt"></i> 최신 상품리스트</h1>
+
+            <div class="t-flex-grow"></div>
+
+            <select class="form-select w-auto"
+                    onchange="location.href = '?search_keyword={{request.GET.search_keyword}}&category_item_id=' + this.value">
+                <option value="-1" disabled>카테고리</option>
+                <option value="">전체</option>
+                {% for product_cate_item in product_cate_items %}
+                <option value="{{product_cate_item.id}}">
+                    <a href="?cate_item_id{{product_cate_item.id}}">{{product_cate_item.name}}</a>
+                </option>
+                {% endfor %}
+            </select>
+            <script>
+                $('select').last().val('{{request.GET.category_item_id}}');
+
+            </script>
+        </div>
+
+        {% if request.GET.category_item_id or request.GET.search_keyword %}
+        <hr>
+
+        {% if request.GET.search_keyword %}
+        <a href="?category={{request.GET.category}}" class="badge bg-primary">검색어 `{{request.GET.search_keyword}}` 제거 <i
+                class="fas fa-times"></i></a>
+        {% endif %}
+
+        {% if request.GET.category_item_id %}
+        <a href="?search_keyword={{request.GET.search_keyword}}" class="badge bg-primary">카테고리 `{{category_item_name}}`
+            제거 <i class="fas fa-times"></i></a>
+        {% endif %}
+
+        {% endif %}
+
+        <hr>
+
+        <ul class="t-grid t-grid-cols-1 sm:t-grid-cols-2 md:t-grid-cols-3 lg:sm:t-grid-cols-4 t-gap-[20px] t-mt-3">
+            {% for product in products %}
+
+            <li class="t-flex t-flex-col t-group">
+                <!-- 이미지 호버 효과를 알기쉽게 여러 엘리먼트를 추가로 만들어서 진행, 가독성을 위함 -->
+                <a href="{% url 'products:detail' product.id %}"
+                   class="t-relative t-overflow-hidden t-rounded">
+                    <img class="t-block t-w-full t-transition-all group-hover:t-scale-110 t-object-cover"
+                         src="{{product.thumb_img_url}}" alt="" style="aspect-ratio: 1 / 1;">
+                    <!-- 마우스 호버시 이미지 위에 나타나는 어두운 필름 역할 -->
+                    <div class="t-absolute t-inset-0 t-bg-[#00000000] group-hover:t-bg-[#00000055] t-transition-all"></div>
+                    <!-- 마우스 호버시 어두운 필름 위에 나타나는 텍스트 -->
+                    <div class="t-absolute t-inset-0 t-opacity-0 group-hover:t-opacity-100 t-flex t-items-center t-justify-center t-transition-all">
+                        <span class="t-no-underline t-text-white t-border-2 t-border-white t-border-solid t-rounded t-p-2 t-whitespace-nowrap">
+                            VIEW MORE
+                        </span>
+                    </div>
+                </a>
+                <a class="t-text-center t-mt-2 t-no-underline t-text-black t-italic group-hover:t-underline"
+                   href="{% url 'products:detail' product.id %}">
+                    {{product.display_name}}
+                </a>
+                <a class="t-text-center t-mt-2 t-no-underline t-text-gray-400 group-hover:t-text-blue-500"
+                   href="{% url 'products:detail' product.id %}">
+                    <i class="fas fa-won-sign"></i>
+                    <span>{{ product.sale_price|intcomma }}</span>
+                </a>
+                <a class="t-text-center t-mt-2 t-no-underline t-text-gray-400 group-hover:t-text-blue-500"
+                   href="{% url 'products:detail' product.id %}">
+                    <span>{{ product.colors|safe }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <ul class="pagination justify-content-center t-mt-12">
+            <!-- 이전페이지 -->
+            {% if products.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ products.previous_page_number }}&search_keyword={{request.GET.search_keyword}}">이전</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+            </li>
+            {% endif %}
+            <!-- 페이지리스트 -->
+            {% for page_number in products.paginator.page_range %}
+            {% if products.number|add:-5 <= page_number <= products.number|add:5 %}
+            {% if page_number == products.number %}
+            <li class="page-item active" aria-current="page">
+                <a class="page-link" href="?page={{ page_number }}&search_keyword={{request.GET.search_keyword}}">
+                    {{ page_number }}</a>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_number }}&search_keyword={{request.GET.search_keyword}}">
+                    {{page_number }}
+                </a>
+            </li>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+            <!-- 다음페이지 -->
+            {% if products.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ products.next_page_number }}&search_keyword={{request.GET.search_keyword}}">다음</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</section>
+
+{%endblock%}

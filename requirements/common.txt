@@ -1,0 +1,9 @@
+Django
+pillow
+git+https://github.com/jhs512/django-pydenticon
+django_bootstrap5
+mysqlclient
+django-dotenv
+django_bootstrap5
+lazy-string
+django-seed

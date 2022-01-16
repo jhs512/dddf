@@ -1,0 +1,251 @@
+{% extends "layout.html" %}
+{% load humanize %}
+{% load django_bootstrap5 %}
+
+{%block content %}
+
+<section class="section-prod-detail">
+    <div class="container t-grid lg:t-grid-cols-[3fr_4fr] t-gap-10 t-items-start" style="">
+        <div class="card lg:!t-sticky lg:t-top-[76px]">
+            <div class="card-header">
+                상품상세정보
+            </div>
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <a href="#product-img"><img class="t-w-full t-max-w-[300px] t-rounded"
+                                                src="{{product.thumb_img_url}}" alt=""></a>
+                </li>
+                <li class="list-group-item">
+                    <span class="t-w-16 t-inline-block">번호</span>
+                    <span class="badge bg-primary">{{product.id}}</span>
+                </li>
+                <li class="list-group-item">
+                    <span class="t-w-16 t-inline-block">마켓</span>
+                    <span class="badge bg-primary">{{product.market.name}}</span>
+                </li>
+                <li class="list-group-item">
+                    <span class="t-w-16 t-inline-block">카테고리</span>
+                    {{product.category.name}}
+                </li>
+                <li class="list-group-item">
+                    <span class="t-w-16 t-inline-block">상품명</span>
+                    <span class="t-font-bold">{{product.display_name}}</span>
+                </li>
+                <li class="list-group-item">
+                    <span class="t-w-16 t-inline-block">가격</span>
+                    <span class="t-font-bold">{{product.sale_price|intcomma}}</span>원
+                </li>
+                <li class="list-group-item">
+                    <span class="t-w-16 t-inline-block">색상</span>
+                    {{product.colors|safe}}
+                </li>
+            </ul>
+
+        </div>
+
+        <div class="card lg:!t-sticky lg:t-top-[76px]">
+            <div class="card-header">
+                옵션
+            </div>
+
+            <div class="card-body">
+                <table class="table table-hover">
+                    <colgroup>
+                        <col class="sm:t-w-40">
+                        <col class="sm:t-w-40">
+                        <col>
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>사이즈</th>
+                        <th>색상</th>
+                        <th>품절</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for product_real in product_reals %}
+                    <tr>
+                        <td>
+                            {{product_real.option_1_display_name}}
+                        </td>
+                        <td>
+                            {{product_real.option_2_display_name}}
+                            <span class="t-w-[10px] t-h-[10px] t-rounded-full t-inline-block" style="background-color:#{{product_real.rgb_color}};"></span>
+                        </td>
+                        <td>
+                            {% if not product_real.is_sold_out %}
+                            <span class="badge bg-primary">판매중</span>
+                            {% else %}
+                            <span class="badge bg-secondary">품절</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% if not question_modify_form %}
+    <div class="container t-grid lg:t-grid-cols-[1fr_2fr] t-gap-10 t-items-start t-mt-10">
+        <div class="card lg:!t-sticky lg:t-top-[76px]">
+            <div class="card-header">
+                질문등록
+            </div>
+
+            <div class="card-body">
+                {% if user.is_authenticated %}
+
+                <form method="POST" action="{% url 'products:question_create' product.id %}">
+                    <input type="hidden" name="form_name" value="product_question_create">
+                    {% csrf_token %}
+
+                    {% bootstrap_form question_create_form %}
+                    {% bootstrap_button button_type="submit" content="<i class='fas fa-pen'></i> 질문작성" %}
+                    {% bootstrap_button button_type="reset" content="취소" button_class="btn-outline-primary" %}
+                </form>
+
+                {% if question_create_form.errors %}
+                <script>
+                    let $lastForm = $('form').last();
+                    $(window).on('load', function() {
+                        $(window).scrollTop($lastForm.offset().top - $(window).height() + $lastForm.height() + 50);
+                    });
+
+                </script>
+                {% endif %}
+
+                {% else %}
+                <div class="t-text-gray-400">
+                    <a href="{% url 'accounts:login' %}?next={{request.get_full_path}}">로그인</a> 후 이용해주세요.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                질문리스트
+            </div>
+
+            {% if questions %}
+            <ul class="list-group list-group-flush">
+                {% for question in questions %}
+                <li class="list-group-item">
+                    <div class="t-flex t-items-start mt-2">
+                        <span class="badge bg-primary">{{question.id}}</span>
+
+                        <div class="t-flex-grow"></div>
+
+                        <span class="badge bg-secondary">{{question.user.name}}</span>
+                        <span>&nbsp;</span>
+                        <span class="badge bg-secondary">{{question.reg_date|date:"y-m-d h:i"}}</span>
+                    </div>
+                    <div class="t-flex t-items-start mt-2">
+                        <span>{{question.body|linebreaksbr}}</span>
+                        <div class="t-flex-grow"></div>
+                        {% if question.user == request.user %}
+                        &nbsp;
+                        <div class="t-flex-shrink-0 t-flex t-flex-col sm:t-flex-row t-gap-2">
+                            <a href="{% url 'products:question_delete' product.id question.id %}"
+                               class="btn btn-sm btn-danger"
+                               onclick="if ( confirm('정말 삭제하시겠습니까?') == false ) return false;">
+                                <i class="far fa-trash-alt"></i>
+                                <span class="t-hidden sm:t-inline-block">삭제</span>
+                            </a>
+                            <a href="{% url 'products:question_modify' product.id question.id %}"
+                               class="btn btn-sm btn-secondary">
+                                <i class="fas fa-edit"></i>
+                                <span class="t-hidden sm:t-inline-block">수정</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if not questions %}
+            <div class="card-body">
+                <div class="t-text-gray-400">
+                    질문이 없습니다.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+    {% else %}
+    <div class="container t-grid lg:t-grid-cols-[1fr_1fr] t-gap-10 t-items-start t-mt-10">
+        <div class="card lg:!t-sticky lg:t-top-[76px]">
+            <div class="card-header">
+                질문수정
+            </div>
+
+            <div class="card-body">
+                <form method="POST" action="{% url 'products:question_modify' product.id question.id %}">
+                    <input type="hidden" name="form_name" value="question_modify_form">
+                    {% csrf_token %}
+
+                    {% bootstrap_form question_modify_form %}
+                    {% bootstrap_button button_type="submit" content="<i class='fas fa-pen'></i> 질문수정" %}
+                    {% bootstrap_button button_type="reset" content="취소" button_class="btn-outline-primary" %}
+                </form>
+
+                <script>
+                    let $lastForm = $('form').last();
+                    $(window).on('load', function() {
+                        $(window).scrollTop($lastForm.offset().top - $(window).height() + $lastForm.height() + 50);
+                    });
+
+                </script>
+
+            </div>
+        </div>
+
+        <div class="card lg:!t-sticky lg:t-top-[76px]">
+            <div class="card-header">
+                기존 질문
+            </div>
+
+            <div class="card-body">
+                <div class="t-flex t-items-start mt-2">
+                    <span class="badge bg-primary">{{question.id}}</span>
+
+                    <div class="t-flex-grow"></div>
+
+                    <span class="badge bg-secondary">{{question.user.name}}</span>
+                    <span>&nbsp;</span>
+                    <span>{{question.reg_date|date:"Y-m-d"}}</span>
+                </div>
+                <div class="t-flex t-items-start mt-2">
+                    <span>{{question.body|linebreaksbr}}</span>
+                    <div class="t-flex-grow"></div>
+                    {% if question.user == request.user %}
+                    &nbsp;
+                    <div class="t-flex-shrink-0 t-flex t-flex-col sm:t-flex-row t-gap-2">
+                        <a href="{% url 'products:question_delete' product.id question.id %}"
+                           class="btn btn-sm btn-danger"
+                           onclick="if ( confirm('정말 삭제하시겠습니까?') == false ) return false;">
+                            <i class="far fa-trash-alt"></i>
+                            <span class="t-hidden sm:t-inline-block">삭제</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container t-mt-10">
+        <a href="#">
+            <img style="scroll-margin-top:72px;" id="product-img" class="t-w-full t-block rounded"
+                 src="{{product.thumb_img_url}}" alt="">
+        </a>
+    </div>
+</section>
+{%endblock%}

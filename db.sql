@@ -1,0 +1,5 @@
+GRANT ALL PRIVILEGES ON *.* TO sbsst@`%` IDENTIFIED BY 'sbs123414';
+
+DROP DATABASE IF EXISTS sample1_dev;
+CREATE DATABASE sample1_dev;
+USE sample1_dev;
